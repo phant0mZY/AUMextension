@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Amrita Student Companion",
+  "version": "1.1.0",
+  "description": "Personal academic dashboard and class-skip calculator with automatic background synchronization for Amrita students.",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Amrita Student Companion",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://aumscn.amrita.edu/*",
+        "https://aumscb.amrita.edu/*",
+        "https://aumsblr.amrita.edu/*"
+      ],
+      "js": [
+        "shared/courses.js",
+        "shared/storage.js",
+        "content-scripts/aums-marks.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://students.amrita.edu/*"
+      ],
+      "js": [
+        "shared/courses.js",
+        "shared/storage.js",
+        "content-scripts/attendance.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

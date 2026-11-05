@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amrita Student Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="brand">
+        <div class="brand-logo">A</div>
+        <div>
+          <h1 class="brand-title">Amrita Companion</h1>
+          <p class="brand-subtitle">Background Sync Active</p>
+        </div>
+      </div>
+      <button id="sync-all-btn" class="sync-pill" title="Refresh both portals in background">
+        <span class="sync-icon">🔄</span> Sync All
+      </button>
+    </header>
+
+    <main class="popup-main">
+      <!-- Session Expiry Warning Alerts -->
+      <div id="session-alert" class="alert-box" style="display: none;">
+        <span class="alert-icon">⚠️</span>
+        <span id="session-alert-text">Session expired. Please log in.</span>
+      </div>
+
+      <!-- Quick Status Cards -->
+      <section class="summary-cards">
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon card-icon-attn">📊</div>
+            <button id="sync-attn-btn" class="mini-refresh-btn" title="Sync Attendance in background">🔄</button>
+          </div>
+          <div class="card-content">
+            <span class="card-label">Attendance</span>
+            <div class="card-value" id="quick-attendance">--</div>
+            <span class="card-hint" id="quick-attendance-hint">No snapshot yet</span>
+            <span class="timestamp-hint" id="attn-sync-time">Last: Never</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-top">
+            <div class="card-icon card-icon-marks">📝</div>
+            <button id="sync-marks-btn" class="mini-refresh-btn" title="Sync Marks in background">🔄</button>
+          </div>
+          <div class="card-content">
+            <span class="card-label">Internal Marks</span>
+            <div class="card-value" id="quick-marks">--</div>
+            <span class="card-hint" id="quick-marks-hint">No snapshot yet</span>
+            <span class="timestamp-hint" id="marks-sync-time">Last: Never</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Portal Shortcuts -->
+      <section class="portal-links">
+        <div class="section-title">PORTAL LOGIN &amp; ACCESS</div>
+        <div class="links-row">
+          <a href="https://students.amrita.edu/client/index" target="_blank" class="portal-btn" id="myamrita-link">
+            <span>🎓 MyAmrita</span>
+          </a>
+          <a href="https://aumscn.amrita.edu/cas/login?service=https%3A%2F%2Faumscn.amrita.edu%2Faums%2FJsp%2FCommon%2Findex.jsp" target="_blank" class="portal-btn" id="aums-link">
+            <span>🏛️ AUMS (CAS)</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Primary Action -->
+      <button id="open-dashboard-btn" class="btn btn-primary">
+        <span>Open Academic Dashboard</span>
+        <span class="btn-arrow">↗</span>
+      </button>
+
+      <!-- Dev / Reset -->
+      <div class="dev-actions">
+        <button id="load-sample-btn" class="btn-text">⚡ Load Demo Data</button>
+        <button id="clear-sample-btn" class="btn-text text-danger">Reset Data</button>
+      </div>
+    </main>
+
+    <footer class="popup-footer">
+      <span>Auto-syncs silently after login • Zero credentials stored</span>
+    </footer>
+  </div>
+
+  <script src="../shared/sample-data.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

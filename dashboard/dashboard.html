@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amrita Student Companion — Academic Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="brand-badge">A</div>
+          <div>
+            <h1 class="brand-title">Amrita Student Companion</h1>
+            <p class="brand-subtitle">Personal Academic Dashboard • Private &amp; Local</p>
+          </div>
+        </div>
+
+        <div class="nav-actions">
+          <div class="status-indicator" id="overall-status-pill">
+            <span class="status-dot"></span>
+            <span id="overall-status-text">Checking local storage...</span>
+          </div>
+          <button id="dash-sync-all-btn" class="icon-button" title="Refresh both portals in background">
+            🔄 Sync Portals
+          </button>
+          <button id="settings-toggle-btn" class="icon-button" title="Settings" aria-label="Settings">
+            ⚙️ Settings
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+      <!-- Freshness & Disclaimer Banner -->
+      <section class="banner-card">
+        <div class="banner-content">
+          <span class="banner-icon">ℹ️</span>
+          <div>
+            <strong>Attendance &amp; Academic Notice:</strong> Attendance projections are estimates based on data recorded in MyAmrita/AUMS. Actual requirements and official records may vary if classes are rescheduled, cancelled, or updated by the department.
+          </div>
+        </div>
+        <div class="banner-timestamps" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <span id="attendance-last-updated">Attendance: Not synced</span>
+            <button id="dash-sync-attn-btn" class="mini-sync-link" title="Sync Attendance in background">🔄 Sync Attendance</button>
+            <span style="margin: 0 6px;">•</span>
+            <span id="marks-last-updated">Marks: Not synced</span>
+            <button id="dash-sync-marks-btn" class="mini-sync-link" title="Sync Marks in background">🔄 Sync Marks</button>
+          </div>
+          <div id="dash-sync-state-msg" style="font-size: 11.5px; font-weight: 600;"></div>
+        </div>
+      </section>
+
+      <!-- Overview Metric Cards -->
+      <section class="overview-grid">
+        <div class="metric-card">
+          <span class="metric-title">OVERALL ATTENDANCE</span>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-overall-attn">--%</span>
+            <span class="metric-badge" id="metric-attn-badge">No Data</span>
+          </div>
+          <span class="metric-subtext" id="metric-overall-classes">0 of 0 classes attended</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">TOTAL COURSES</span>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-course-count">0</span>
+            <span class="metric-badge badge-neutral" id="metric-sem-badge">Current Sem</span>
+          </div>
+          <span class="metric-subtext">Active enrolled subjects</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">INTERNAL MARKS AVG</span>
+          <div class="metric-value-row">
+            <span class="metric-value" id="metric-marks-avg">--%</span>
+            <span class="metric-badge badge-neutral" id="metric-marks-count">0 exams</span>
+          </div>
+          <span class="metric-subtext">Average across evaluated tests</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-title">ATTENDANCE ATTENTION</span>
+          <div class="metric-value-row">
+            <span class="metric-value text-danger" id="metric-danger-count">0</span>
+            <span class="metric-badge badge-neutral" id="metric-threshold-badge">Threshold &lt; 75%</span>
+          </div>
+          <span class="metric-subtext" id="metric-danger-subtext">Courses requiring recovery</span>
+        </div>
+      </section>
+
+      <!-- Tab Navigation -->
+      <nav class="section-tabs">
+        <button class="tab-btn active" data-tab="tab-attendance">
+          <span>📊 Attendance &amp; Skip Calculator</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-marks">
+          <span>📝 Internal Marks</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: Attendance & Class-Skip Calculator -->
+      <div id="tab-attendance" class="tab-panel active">
+        <!-- Attendance Empty State -->
+        <div id="attendance-empty" class="empty-state" style="display: none;">
+          <div class="empty-icon">📊</div>
+          <h3>No Attendance Data Stored</h3>
+          <p>Log in to MyAmrita or AUMS and visit your Attendance page. The companion extension will automatically capture and update your records locally.</p>
+          <div class="empty-actions">
+            <a href="https://students.amrita.edu/client/index" target="_blank" class="btn btn-primary">Go to MyAmrita Portal ↗</a>
+            <button class="btn btn-secondary load-dev-sample-btn">Load Demo Sample Data</button>
+          </div>
+        </div>
+
+        <!-- Attendance List -->
+        <div id="attendance-list" class="cards-list">
+          <!-- Dynamically populated course attendance cards -->
+        </div>
+      </div>
+
+      <!-- TAB 2: Internal Marks Snapshot -->
+      <div id="tab-marks" class="tab-panel">
+        <!-- Marks Empty State -->
+        <div id="marks-empty" class="empty-state" style="display: none;">
+          <div class="empty-icon">📝</div>
+          <h3>No Internal Marks Snapshot Stored</h3>
+          <p>Log in to AUMS and navigate to <strong>Marks &gt; View Published Marks</strong>. The companion extension will safely capture your marks table into local browser storage.</p>
+          <div class="empty-actions">
+            <a href="https://aumscn.amrita.edu/cas/login?service=https%3A%2F%2Faumscn.amrita.edu%2Faums%2FJsp%2FCommon%2Findex.jsp" target="_blank" class="btn btn-primary">Go to AUMS Portal (CAS) ↗</a>
+            <button class="btn btn-secondary load-dev-sample-btn">Load Demo Sample Data</button>
+          </div>
+        </div>
+
+        <!-- Marks Course List -->
+        <div id="marks-list" class="cards-list">
+          <!-- Dynamically populated marks cards -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2>Dashboard Settings</h2>
+          <button id="settings-close-btn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="threshold-input">Target Attendance Threshold (%)</label>
+            <p class="form-hint">Used for skip projection alerts and recovery calculation. Default is 75%.</p>
+            <input type="number" id="threshold-input" min="50" max="95" value="75" step="1" class="form-control">
+          </div>
+
+          <div class="settings-divider"></div>
+
+          <div class="form-group">
+            <label>Developer &amp; Testing Tools</label>
+            <p class="form-hint">Preview how the dashboard functions with sample MCA course data.</p>
+            <button class="btn btn-secondary load-dev-sample-btn" style="margin-top: 6px;">Load MCA Sample Data</button>
+          </div>
+
+          <div class="settings-divider"></div>
+
+          <div class="form-group">
+            <label class="text-danger">Privacy &amp; Data Deletion</label>
+            <p class="form-hint">All marks and attendance snapshots are saved strictly inside your browser's local profile. You can erase everything at any time.</p>
+            <button id="clear-all-data-btn" class="btn btn-danger" style="margin-top: 8px;">
+              🗑️ Clear Locally Stored Academic Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <p>Amrita Student Companion • Client-Side Only • No Passwords or Data Sent to Any External Server</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../shared/courses.js"></script>
+  <script src="../shared/calculations.js"></script>
+  <script src="../shared/sample-data.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="../shared/utils.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
+
