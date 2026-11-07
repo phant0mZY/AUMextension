@@ -1,61 +1,45 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-title Amrita Student Companion - Installer
+title Amrita Student Companion - Setup Assistant
 color 0F
 
 echo ==============================================================================
-echo                 [A] Amrita Student Companion - Easy Installer
+echo            Amrita Student Companion - Chrome Extension Installer
 echo ==============================================================================
-echo  A privacy-focused academic dashboard and class-skip calculator.
-echo  This script will download the latest version and help you load it in Chrome.
+echo  A personal academic dashboard and class-skip calculator for Amrita students.
+echo  This script downloads the extension to your Desktop for easy loading in Chrome.
 echo ==============================================================================
 echo.
 
 REM -----------------------------------------------------------------------------
-REM Step 1: Determine GitHub Repository URL
+REM Determine Student's Desktop Directory
 REM -----------------------------------------------------------------------------
-set "DEFAULT_REPO=https://github.com/phant0mZY/AUMextension"
-set "REPO_URL=%DEFAULT_REPO%"
+set "DESKTOP_PATH=%USERPROFILE%\Desktop"
+if exist "%OneDrive%\Desktop" set "DESKTOP_PATH=%OneDrive%\Desktop"
+if exist "%OneDriveConsumer%\Desktop" set "DESKTOP_PATH=%OneDriveConsumer%\Desktop"
+set "INSTALL_BASE=%DESKTOP_PATH%\AmritaStudentCompanion"
 
-echo [1/6] GitHub Repository Configuration
+REM -----------------------------------------------------------------------------
+REM Step 1: Download latest extension ZIP
+REM -----------------------------------------------------------------------------
+set "REPO_ZIP_URL=https://github.com/phant0mZY/AUMextension/archive/refs/heads/main.zip"
+set "FALLBACK_ZIP_URL=https://github.com/phant0mZY/AUMextension/archive/refs/heads/master.zip"
+set "TEMP_ZIP=%TEMP%\AmritaStudentCompanion_setup.zip"
+
+echo [Step 1/4] Downloading latest extension archive...
 echo ------------------------------------------------------------------------------
-echo Default Repository: %DEFAULT_REPO%
-echo.
-set "USER_INPUT="
-set /p "USER_INPUT=Enter repository URL [Press ENTER to use default]: "
-
-REM Strip leading/trailing spaces
-for /f "tokens=* delims= " %%A in ("!USER_INPUT!") do set "USER_INPUT=%%A"
-
-if not "!USER_INPUT!"=="" set "REPO_URL=!USER_INPUT!"
-
-REM Strip trailing slashes or .git suffix if present
-if "!REPO_URL:~-4!"==".git" set "REPO_URL=!REPO_URL:~0,-4!"
-if "!REPO_URL:~-1!"=="/" set "REPO_URL=!REPO_URL:~0,-1!"
-
-set "ZIP_URL=!REPO_URL!/archive/refs/heads/main.zip"
-set "FALLBACK_ZIP_URL=!REPO_URL!/archive/refs/heads/master.zip"
-
-echo.
-echo Target Repository : !REPO_URL!
-echo Download URL      : !ZIP_URL!
+echo Source: https://github.com/phant0mZY/AUMextension
 echo.
 
-REM -----------------------------------------------------------------------------
-REM Step 2: Download Extension Archive
-REM -----------------------------------------------------------------------------
-echo [2/6] Downloading latest release from GitHub...
-echo ------------------------------------------------------------------------------
-set "TEMP_ZIP=%TEMP%\AmritaStudentCompanion_latest.zip"
 if exist "!TEMP_ZIP!" del /f /q "!TEMP_ZIP!" >nul 2>&1
 
 where curl.exe >nul 2>&1
 if %ERRORLEVEL% NEQ 0 goto :download_powershell
 
 :download_curl
-echo Downloading archive via Windows curl...
-curl.exe -L -f --progress-bar -o "!TEMP_ZIP!" "!ZIP_URL!"
+echo Downloading via Windows curl...
+curl.exe -L -f --progress-bar -o "!TEMP_ZIP!" "!REPO_ZIP_URL!"
 if exist "!TEMP_ZIP!" goto :download_validate
 
 echo Main branch download failed. Trying master branch...
@@ -63,8 +47,8 @@ curl.exe -L -f --progress-bar -o "!TEMP_ZIP!" "!FALLBACK_ZIP_URL!"
 goto :download_validate
 
 :download_powershell
-echo Downloading archive via PowerShell...
-powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri '!ZIP_URL!' -OutFile '!TEMP_ZIP!' -UseBasicParsing } catch { Invoke-WebRequest -Uri '!FALLBACK_ZIP_URL!' -OutFile '!TEMP_ZIP!' -UseBasicParsing }"
+echo Downloading via PowerShell...
+powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri '!REPO_ZIP_URL!' -OutFile '!TEMP_ZIP!' -UseBasicParsing } catch { Invoke-WebRequest -Uri '!FALLBACK_ZIP_URL!' -OutFile '!TEMP_ZIP!' -UseBasicParsing }"
 
 :download_validate
 if not exist "!TEMP_ZIP!" goto :download_error
@@ -73,106 +57,123 @@ set "ZIP_SIZE=0"
 for %%A in ("!TEMP_ZIP!") do set "ZIP_SIZE=%%~zA"
 if !ZIP_SIZE! LEQ 0 goto :download_error
 
-echo Download completed successfully (!ZIP_SIZE! bytes).
+echo [OK] Files downloaded successfully (!ZIP_SIZE! bytes).
 echo.
 goto :extract_step
 
 :download_error
 echo.
-echo [ERROR] Download failed or file is empty!
-echo Could not download from: !REPO_URL!
+echo [ERROR] Download failed!
+echo Could not download the extension from:
+echo   !REPO_ZIP_URL!
 echo.
-echo Please verify:
-echo  1. Your internet connection is active.
-echo  2. The GitHub repository exists and is accessible.
+echo Troubleshooting:
+echo  1. Ensure your internet connection is active.
+echo  2. Verify that the GitHub repository is publicly accessible.
 echo.
 if exist "!TEMP_ZIP!" del /f /q "!TEMP_ZIP!" >nul 2>&1
 pause
 exit /b 1
 
 REM -----------------------------------------------------------------------------
-REM Step 3: Extract to %LOCALAPPDATA%\AmritaStudentCompanion
+REM Step 2: Extract to Desktop\AmritaStudentCompanion
 REM -----------------------------------------------------------------------------
 :extract_step
-set "TARGET_BASE=%LOCALAPPDATA%\AmritaStudentCompanion"
-echo [3/6] Installing extension files...
+echo [Step 2/4] Extracting extension to your Desktop...
 echo ------------------------------------------------------------------------------
-echo Target directory: !TARGET_BASE!
+echo Destination: !INSTALL_BASE!
 
-if exist "!TARGET_BASE!" (
-    echo Replacing previous installation safely...
-    rd /s /q "!TARGET_BASE!" >nul 2>&1
+REM Replace older downloaded version safely
+if exist "!INSTALL_BASE!" (
+    echo Clearing older installed files on Desktop...
+    rd /s /q "!INSTALL_BASE!" >nul 2>&1
 )
 
-mkdir "!TARGET_BASE!" >nul 2>&1
+mkdir "!INSTALL_BASE!" >nul 2>&1
 
 where tar.exe >nul 2>&1
 if %ERRORLEVEL% NEQ 0 goto :extract_powershell
 
 echo Extracting archive using Windows tar...
-tar.exe -xf "!TEMP_ZIP!" -C "!TARGET_BASE!"
+tar.exe -xf "!TEMP_ZIP!" -C "!INSTALL_BASE!"
 goto :extract_finish
 
 :extract_powershell
 echo Extracting archive using PowerShell...
-powershell -NoProfile -Command "Expand-Archive -Path '!TEMP_ZIP!' -DestinationPath '!TARGET_BASE!' -Force"
+powershell -NoProfile -Command "Expand-Archive -Path '!TEMP_ZIP!' -DestinationPath '!INSTALL_BASE!' -Force"
 
 :extract_finish
-del /f /q "!TEMP_ZIP!" >nul 2>&1
+if exist "!TEMP_ZIP!" del /f /q "!TEMP_ZIP!" >nul 2>&1
+echo [OK] Extraction completed.
+echo.
 
 REM -----------------------------------------------------------------------------
-REM Step 4: Locate Exact Directory Containing manifest.json
+REM Step 3: Locate exact folder containing manifest.json
 REM -----------------------------------------------------------------------------
-echo.
-echo [4/6] Verifying extension structure...
+echo [Step 3/4] Locating extension manifest...
 echo ------------------------------------------------------------------------------
 
-set "MANIFEST_PATH="
-set "EXTENSION_DIR="
+set "MANIFEST_COUNT=0"
+set "FIRST_MANIFEST="
+set "SELECTED_MANIFEST="
 
-for /r "!TARGET_BASE!" %%F in (manifest.json) do (
+for /r "%INSTALL_BASE%" %%F in (manifest.json) do (
     if exist "%%F" (
-        set "MANIFEST_PATH=%%F"
-        set "EXTENSION_DIR=%%~dpF"
-        goto :manifest_found
+        set /a MANIFEST_COUNT+=1
+        if !MANIFEST_COUNT! EQU 1 set "FIRST_MANIFEST=%%F"
+        if exist "%%~dpFpopup" set "SELECTED_MANIFEST=%%F"
+        if exist "%%~dpFcontent-scripts" set "SELECTED_MANIFEST=%%F"
     )
 )
 
-:manifest_found
-if "!EXTENSION_DIR!"=="" (
-    echo.
-    echo [ERROR] manifest.json was not found inside the extracted files!
-    echo Extraction directory: !TARGET_BASE!
-    echo.
-    echo Note: If this is your repository and you haven't pushed your local extension
-    echo files to GitHub yet, please push them first:
-    echo   git add .
-    echo   git commit -m "Add Amrita Companion extension files"
-    echo   git push origin main
-    echo.
-    echo Then re-run this installer!
-    pause
-    exit /b 1
+if !MANIFEST_COUNT! EQU 0 goto :no_manifest_found
+
+if !MANIFEST_COUNT! EQU 1 (
+    set "SELECTED_MANIFEST=!FIRST_MANIFEST!"
+    echo [OK] Located extension package.
+) else (
+    if not defined SELECTED_MANIFEST set "SELECTED_MANIFEST=!FIRST_MANIFEST!"
+    echo [NOTE] Detected !MANIFEST_COUNT! manifest.json files in archive.
+    echo Selected primary package: !SELECTED_MANIFEST!
 )
 
+REM Extract directory from manifest path
+for %%D in ("!SELECTED_MANIFEST!") do set "EXTENSION_DIR=%%~dpD"
 if "!EXTENSION_DIR:~-1!"=="\" set "EXTENSION_DIR=!EXTENSION_DIR:~0,-1!"
 
-echo Manifest located at: !MANIFEST_PATH!
-echo Extension folder   : !EXTENSION_DIR!
+echo Manifest Path   : !SELECTED_MANIFEST!
+echo Extension Folder: !EXTENSION_DIR!
 echo.
+goto :launch_step
 
-echo|set /p="!EXTENSION_DIR!"|clip
-echo [COPIED] Extension folder path has been automatically copied to clipboard!
+:no_manifest_found
 echo.
+echo [ERROR] manifest.json was not found in the extracted archive!
+echo Extraction folder: !INSTALL_BASE!
+echo.
+echo Extracted directory contents:
+dir /s /b "!INSTALL_BASE!"
+echo.
+echo Please ensure the repository contains a valid Chrome extension manifest.
+pause
+exit /b 1
 
 REM -----------------------------------------------------------------------------
-REM Step 5: Launch Chrome and Open Explorer
+REM Step 4: Open Chrome and File Explorer
 REM -----------------------------------------------------------------------------
-echo [5/6] Opening Chrome Extensions and File Explorer...
+:launch_step
+echo [Step 4/4] Opening Chrome Extensions and File Explorer...
 echo ------------------------------------------------------------------------------
 
-start "" explorer.exe "!EXTENSION_DIR!"
+REM Copy path to clipboard for student convenience
+echo|set /p="!EXTENSION_DIR!"|clip
+echo [OK] Folder path copied to clipboard: "!EXTENSION_DIR!"
 
+REM Open File Explorer at the exact extension folder
+start "" explorer.exe "!EXTENSION_DIR!"
+echo [OK] File Explorer opened at extension folder.
+
+REM Locate Chrome executable
 set "CHROME_EXE="
 if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
     set "CHROME_EXE=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
@@ -184,34 +185,51 @@ if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
 
 if defined CHROME_EXE (
     start "" "!CHROME_EXE!" "chrome://extensions"
+    echo [OK] Chrome opened to chrome://extensions
 ) else (
     start "" "chrome://extensions" >nul 2>&1
+    if !ERRORLEVEL! NEQ 0 (
+        echo [NOTE] Could not open Chrome automatically.
+        echo Please manually open Google Chrome and navigate to: chrome://extensions
+    ) else (
+        echo [OK] Chrome opened to chrome://extensions
+    )
 )
 
-REM -----------------------------------------------------------------------------
-REM Step 6: Clear, Step-by-Step Instructions
-REM -----------------------------------------------------------------------------
 echo.
 echo ==============================================================================
-echo               [*] INSTALLATION READY - FINAL 3 STEPS IN CHROME
+echo  Chrome Extensions is now open, and your extension folder is on your Desktop!
 echo ==============================================================================
 echo.
-echo  Step A: In Chrome, look at the top-right corner of the Extensions page:
-echo         [ ] Toggle ON "Developer mode"
+echo  Follow these remaining steps to complete the installation:
 echo.
-echo  Step B: Look at the top-left corner:
-echo         Click the "Load unpacked" button.
+echo   1. In Chrome, turn on "Developer mode" in the top-right corner.
 echo.
-echo  Step C: In the folder selection window that opens:
-echo         1. Click the address bar at the top of the dialog.
-echo         2. Press [Ctrl + V] to paste the path:
-echo            "!EXTENSION_DIR!"
-echo         3. Press Enter, then click "Select Folder".
+echo   2. Click the "Load unpacked" button in the top-left corner.
+echo.
+echo   3. In the folder picker window that opens:
+echo      - Click "Desktop" on the left sidebar.
+echo      - Select the "AmritaStudentCompanion" folder.
+echo        (OR click the address bar, press [Ctrl + V], and press Enter).
+echo.
+echo   4. Click "Select Folder".
+echo.
+echo   5. The Amrita Student Companion extension will immediately appear in Chrome!
 echo.
 echo ==============================================================================
-echo  [OK] That's it! "Amrita Student Companion" is now loaded in your Chrome.
-echo  [OK] Pin it to your toolbar by clicking the puzzle piece icon in Chrome.
-echo  [OK] To update in the future, simply re-run this script anytime!
+echo  IMPORTANT:
+echo  The extension folder is saved on your Desktop:
+echo    !EXTENSION_DIR!
+echo.
+echo  Do not delete this folder from your Desktop, because Chrome runs the
+echo  extension directly from this location.
+echo.
+echo  Status:
+echo   [OK] Downloaded and placed on Desktop successfully
+echo   [OK] Chrome and File Explorer opened
+echo   [..] Waiting for you to complete the manual steps in Chrome above...
 echo ==============================================================================
 echo.
-pause
+echo When you have finished loading the extension in Chrome, press any key to exit.
+pause >nul
+exit /b 0
